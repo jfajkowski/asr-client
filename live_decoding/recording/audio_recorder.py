@@ -45,7 +45,7 @@ class AudioRecorder:
         pass
 
     @abstractmethod
-    def _on_file_saved(self):
+    def _on_file_saved(self, filename):
         pass
 
     def start(self):
@@ -65,7 +65,7 @@ class AudioRecorder:
         self.__stream.close()
         if save_filename:
             self._save(save_filename)
-        self.__reset()
+        self._reset()
 
     def _save(self, filename):
         with wave.open(filename, mode='wb') as f_out:
@@ -73,7 +73,7 @@ class AudioRecorder:
             f_out.setsampwidth(pyaudio.get_sample_size(FORMAT))
             f_out.setframerate(SAMPLE_RATE)
             f_out.writeframes(self._samples)
-        self._on_file_saved()
+        self._on_file_saved(filename)
 
     def _reset(self):
         self._samples = bytearray()

@@ -8,5 +8,5 @@ class ManualAudioRecorder(AudioRecorder):
     def _on_chunk(self):
         pass
 
-    def _on_file_saved(self):
+    def _on_file_saved(self, filename):
         pass
