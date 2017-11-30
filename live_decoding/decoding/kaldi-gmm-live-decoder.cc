@@ -39,14 +39,14 @@ void GetDiagnosticsAndPrintOutput(const std::string &utt,
                   << " frames.";
                          
     if (word_syms != NULL) {
-        std::cerr << utt << ' ';
+        std::cout << utt << ' ';
         for (size_t i = 0; i < words.size(); i++) {
             std::string s = word_syms->Find(words[i]);
             if (s == "")
                 KALDI_ERR << "Word-id " << words[i] << " not in symbol table.";
-            std::cerr << s << ' ';
+            std::cout << s << ' ';
         }
-        std::cerr << std::endl;
+        std::cout << std::endl;
     }
 }
 

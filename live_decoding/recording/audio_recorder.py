@@ -8,8 +8,11 @@ CHANNELS = 1
 SAMPLE_RATE = 16000
 SAMPLE_WIDTH = 10      # in ms
 
+
+
 class AudioRecorder:
-    def __init__(self, format=FORMAT, channels=CHANNELS, sample_rate=SAMPLE_RATE, sample_width=SAMPLE_WIDTH):
+    def __init__(self, format=FORMAT, channels=CHANNELS, sample_rate=SAMPLE_RATE, sample_width=SAMPLE_WIDTH,
+                 on_chunk_listener=None, on_file_saved_listener=None):
         self.__engine = pyaudio.PyAudio()
         self.__stream = None
 
@@ -19,36 +22,32 @@ class AudioRecorder:
         self._sample_size = self.__engine.get_sample_size(format)
         self._sample_width = sample_width
         self._samples = bytearray()
-        self._chunk = bytearray()
         self._chunk_size = int(sample_rate * sample_width / 1000)
+        self._on_chunk_listener = on_chunk_listener
+        self._on_file_saved_listener = on_file_saved_listener
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not self.__stream.is_stopped():
-            self.stop()
-        self.__stream.close()
+        if self.__stream:
+            self.__stream.close()
 
     @property
     def is_recording(self):
         return not self.__stream.is_stopped()
 
-    def _record_callback(self, in_data, sample_count, time_info, status):
-        self._chunk = in_data
-        self._samples += in_data
-        self._on_chunk()
-        return None, pyaudio.paContinue
-
     @abstractmethod
-    def _on_chunk(self):
-        pass
+    def _on_chunk(self, chunk):
+        if self._on_chunk_listener:
+            self._on_chunk_listener(chunk)
 
     @abstractmethod
     def _on_file_saved(self, filename):
-        pass
+        if self._on_file_saved_listener:
+            self._on_file_saved_listener(filename)
 
-    def start(self):
+    def _initialize(self):
         self.__stream = self.__engine.open(format=self._format,
                                            channels=self._channels,
                                            rate=self._sample_rate,
@@ -56,16 +55,10 @@ class AudioRecorder:
                                            input=True,
                                            stream_callback=self._record_callback)
 
-    def pause(self):
-        self.__stream.stop_stream()
-        self.__stream.close()
-
-    def stop(self, save_filename=''):
-        self.__stream.stop_stream()
-        self.__stream.close()
-        if save_filename:
-            self._save(save_filename)
-        self._reset()
+    def _record_callback(self, in_data, sample_count, time_info, status):
+        self._samples += in_data
+        self._on_chunk(in_data)
+        return None, pyaudio.paContinue
 
     def _save(self, filename):
         with wave.open(filename, mode='wb') as f_out:
