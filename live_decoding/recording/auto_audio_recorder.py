@@ -6,8 +6,8 @@ import webrtcvad
 
 from recording.audio_recorder import AudioRecorder
 
-SPEECH_THRESHOLD = 1000  # Time in milliseconds since last frame containing potential speech to classify sound as speech
-
+SPEECH_THRESHOLD = 2000  # Time in milliseconds since last frame containing potential speech to classify sound as speech
+SILENCE_THRESHOLD = 1000
 
 class AutoAudioRecorder(AudioRecorder):
     def __init__(self, speaker_name):
@@ -27,7 +27,7 @@ class AutoAudioRecorder(AudioRecorder):
             if is_speech:
                 self.__is_speech_time = time()
 
-            if (time() - self.__is_speech_time) * 1000 > SPEECH_THRESHOLD:
+            if (time() - self.__is_speech_time) * SILENCE_THRESHOLD > SPEECH_THRESHOLD:
                 filename = '_'.join([self.__speaker_name, datetime.now().strftime('%Y-%m-%d_%H-%M-%S')]) + '.wav'
                 filename = realpath(filename)
                 self._save(filename)

@@ -9,12 +9,12 @@ class ManualAudioRecorder(AudioRecorder):
         self._initialize()
 
     def pause(self):
-        self.__stream.stop_stream()
-        self.__stream.close()
+        self._stream.stop_stream()
+        self._stream.close()
 
     def stop(self, save_filename=''):
-        self.__stream.stop_stream()
-        self.__stream.close()
+        self._stream.stop_stream()
+        self._stream.close()
         if save_filename:
             self._save(save_filename)
         self._reset()
@@ -24,3 +24,9 @@ class ManualAudioRecorder(AudioRecorder):
 
     def _on_chunk(self, chunk):
         super()._on_chunk(chunk)
+
+if __name__ == '__main__':
+    with ManualAudioRecorder() as recorder:
+        recorder.start()
+        input()
+        recorder.stop('recording.wav')

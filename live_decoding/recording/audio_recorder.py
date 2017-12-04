@@ -14,7 +14,7 @@ class AudioRecorder:
     def __init__(self, format=FORMAT, channels=CHANNELS, sample_rate=SAMPLE_RATE, sample_width=SAMPLE_WIDTH,
                  on_chunk_listener=None, on_file_saved_listener=None):
         self.__engine = pyaudio.PyAudio()
-        self.__stream = None
+        self._stream = None
 
         self._channels = channels
         self._format = format
@@ -30,12 +30,12 @@ class AudioRecorder:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.__stream:
-            self.__stream.close()
+        if self._stream:
+            self._stream.close()
 
     @property
     def is_recording(self):
-        return not self.__stream.is_stopped()
+        return not self._stream.is_stopped()
 
     @abstractmethod
     def _on_chunk(self, chunk):
@@ -48,12 +48,12 @@ class AudioRecorder:
             self._on_file_saved_listener(filename)
 
     def _initialize(self):
-        self.__stream = self.__engine.open(format=self._format,
-                                           channels=self._channels,
-                                           rate=self._sample_rate,
-                                           frames_per_buffer=self._chunk_size,
-                                           input=True,
-                                           stream_callback=self._record_callback)
+        self._stream = self.__engine.open(format=self._format,
+                                          channels=self._channels,
+                                          rate=self._sample_rate,
+                                          frames_per_buffer=self._chunk_size,
+                                          input=True,
+                                          stream_callback=self._record_callback)
 
     def _record_callback(self, in_data, sample_count, time_info, status):
         self._samples += in_data

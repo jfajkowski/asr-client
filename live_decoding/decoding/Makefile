@@ -1,4 +1,4 @@
-KALDI_DIR = /home/fajqa/kaldi
+KALDI_DIR = /opt/kaldi
 
 all:
 

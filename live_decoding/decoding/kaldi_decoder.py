@@ -12,13 +12,14 @@ class KaldiDecoder(Decoder):
         self._model_dir = model_dir
         self._process = None
         self._running = False
+        self._reading_thread = None
 
     def initialize(self):
         self._running = True
         self._process = subprocess.Popen(['./decoding/kaldi-gmm-live-decoder',
-                                         '--config=/home/fajqa/PycharmProjects/asr-system/pipeline/builds/pl-PL/0.0.3/exp/tri1/conf/online_decoding.conf',
-                                         '--word-symbol-table=/home/fajqa/PycharmProjects/asr-system/pipeline/builds/pl-PL/0.0.3/exp/tri1/graph/words.txt',
-                                         '/home/fajqa/PycharmProjects/asr-system/pipeline/builds/pl-PL/0.0.3/exp/tri1/graph/HCLG.fst',
+                                         '--config=/home/jfajkowski/Projects/asr-system/pipeline/builds/pl-PL/0.0.3/exp/tri3b/conf/online_decoding.conf',
+                                         '--word-symbol-table=/home/jfajkowski/Projects/asr-system/pipeline/builds/pl-PL/0.0.3/exp/tri3b/graph/words.txt',
+                                         '/home/jfajkowski/Projects/asr-system/pipeline/builds/pl-PL/0.0.3/exp/tri3b/graph/HCLG.fst',
                                          'ark:echo SPEAKER UTTERANCE|',
                                          'scp:-',
                                          'ark:/dev/null'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
