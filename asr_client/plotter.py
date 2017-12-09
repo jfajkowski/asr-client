@@ -1,18 +1,23 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.signal import hilbert
 import time
-from recording.audio_recorder import AudioRecorder
+import matplotlib.pyplot as plt
+import numpy as np
+import pyaudio
+from scipy.fftpack import hilbert
+
+from recorder import RecordingListener, RecordingEvent
 
 
-class PlottingAudioRecorder(AudioRecorder):
-    def __init__(self, max_fps=120, samples_per_window=2048, window_height=10000):
+class Plotter(RecordingListener):
+    def __init__(self, max_fps=120, samples_per_window=2048, window_height=10000, sample_format=pyaudio.paInt16):
         super().__init__()
-        self.__min_interval = 1/max_fps
+        self.__engine = pyaudio.PyAudio()
+        self.__min_interval = 1 / max_fps
         self.__prev_time = time.time()
-        self.__samples_per_window = samples_per_window
-        self.__window_size = samples_per_window * self._sample_size
         self.__window_height = window_height
+        self.__samples_per_window = samples_per_window
+        self.__sample_size = self.__engine.get_sample_size(sample_format)
+        self.__samples = bytearray()
+        self.__window_size = samples_per_window * self.__sample_size
 
     @property
     def plotting(self):
@@ -20,15 +25,15 @@ class PlottingAudioRecorder(AudioRecorder):
 
     def show_plot(self):
         fig, signal_line, envelope_line = self.init_plot()
-        while plt.get_fignums():
-            if len(self._samples) > self.__window_size:
+        while self.plotting:
+            if len(self.__samples) > self.__window_size:
                 self.update_plot(fig, signal_line, envelope_line)
             self.maintain_fps()
 
     def init_plot(self):
         fig, ax = plt.subplots()
         ax.set_xlim(0, self.__samples_per_window)
-        ax.set_ylim(-self.__window_height/2, self.__window_height/2)
+        ax.set_ylim(-self.__window_height / 2, self.__window_height / 2)
         signal_line = ax.plot(np.arange(self.__samples_per_window),
                               np.zeros(self.__samples_per_window), label='signal')[0]
         envelope_line = ax.plot(np.arange(self.__samples_per_window),
@@ -39,7 +44,7 @@ class PlottingAudioRecorder(AudioRecorder):
         return fig, signal_line, envelope_line
 
     def update_plot(self, fig, signal_line, envelope_line):
-        samples = self._samples[-self.__window_size:]
+        samples = self.__samples[-self.__window_size:]
         signal = np.fromstring(str(bytes(samples)), 'Int16')
         analytical_signal = hilbert(signal)
         amplitude_envelope = np.abs(analytical_signal)
@@ -54,8 +59,5 @@ class PlottingAudioRecorder(AudioRecorder):
         if difference > 0:
             time.sleep(difference)
 
-    def _on_file_saved(self, filename):
-        super()._on_file_saved(filename)
-
-    def _on_chunk(self, chunk):
-        super()._on_chunk(chunk)
+    def on_recording(self, recording_event: RecordingEvent):
+        self.__samples += recording_event.samples
