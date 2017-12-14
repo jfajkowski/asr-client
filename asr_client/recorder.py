@@ -46,11 +46,11 @@ class Recorder:
         return not self.__stream.is_stopped()
 
     def __enter__(self):
+        self.record()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.__stream:
-            self.__stream.close()
+        self.stop()
 
     def add_recording_listener(self, recording_listener: RecordingListener):
         self.__recording_listeners.append(recording_listener)
@@ -67,6 +67,7 @@ class Recorder:
                                            stream_callback=self._recording_callback)
 
     def _recording_callback(self, samples, sample_count, time_info, status):
+        self.__samples += samples
         recording_event = RecordingEvent(samples, sample_count, time_info, status)
         for recording_listener in self.__recording_listeners:
             recording_listener.on_recording(recording_event)
@@ -85,3 +86,23 @@ class Recorder:
 
     def reset(self):
         self.__samples = bytearray()
+
+
+if __name__ == '__main__':
+    i = 1
+    recorder = Recorder()
+    input('START')
+    while True:
+        if input('Enter to start recording. Type "x" to exit: ') == 'x':
+            break
+
+        recorder.record()
+        if input('Enter to stop recording. Type "r" to repeat: ') == 'r':
+            recorder.stop()
+            recorder.reset()
+            continue
+
+        recorder.stop()
+        recorder.save('{}.wav'.format(i))
+        recorder.reset()
+        i += 1
